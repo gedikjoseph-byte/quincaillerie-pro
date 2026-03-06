@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuincailleriePro Online</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">🔨 QuincailleriePro <small>Cloud v1.0</small></div>
+    <div class="menu">
+        <button onclick="tabDegistir('satis')">🛒 Vente</button>
+        <button onclick="tabDegistir('iptal')">🔄 Retour/Annulation</button>
+        <button onclick="tabDegistir('urunler')">📦 Stock</button>
+        <button onclick="tabDegistir('musteriler')">👥 Clients</button>
+        <button onclick="tabDegistir('raporlar')">📊 Rapports</button>
+    </div>
+</nav>
+
+<div id="satis" class="tab-content active">
+    <div class="container">
+        <div class="sidebar">
+            <input type="text" id="searchInput" placeholder="Rechercher un produit..." oninput="urunAra()">
+            <div id="productCard" class="card product-preview" style="display:none;">
+                <div class="img-container"><img id="pImg" src=""></div>
+                <h2 id="pTitle"></h2>
+                <div class="edit-prices-box">
+                    <label>Nom du produit :</label><input type="text" id="editAd">
+                    <label>Prix d'Achat :</label><input type="number" id="editAlis" step="0.01">
+                    <label>Prix de Vente :</label><input type="number" id="editSatis" step="0.01">
+                    <label>Image :</label><input type="file" id="editResim" accept="image/*">
+                    <button class="btn-update-small" onclick="stokBilgiGuncelle()">💾 Mettre à jour les infos</button>
+                </div>
+                <div class="qty-selector">
+                    <label>Quantité :</label><input type="number" id="pAdet" value="1" min="1" oninput="araToplamGuncelle()">
+                </div>
+                <div class="price-box">
+                    <span>Total Achat : <b id="pAlisToplam">0</b>€</span>
+                    <span style="color:green">Total Vente : <b id="pSatisToplam">0</b>€</span>
+                </div>
+                <button class="btn-primary" onclick="sepeteEkle()">AJOUTER AU PANIER</button>
+            </div>
+        </div>
+        <div class="main">
+            <h3>Panier de Vente</h3>
+            <table id="cartTable">
+                <thead><tr><th>Produit</th><th>Qté</th><th>Total Achat</th><th>Total Vente</th><th>Action</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <div class="summary">
+                <div class="extra-adjustment">
+                    <label>🤝 Prix Conclu (Net) :</label>
+                    <input type="number" id="finalCashAmount" oninput="finalHesapla()" placeholder="Prix final">
+                    <small>Panier : <b id="rawTotal">0</b>€</small>
+                </div>
+                <div class="total-row">À payer : <span id="totalSatis">0</span>€ | Marge : <span id="totalKar">0</span>€</div>
+                <div class="sales-options">
+                    <select id="odemeYontemi" onchange="odemeKontrol()">
+                        <option value="Espèces">Espèces</option>
+                        <option value="Carte Bancaire">Carte Bancaire</option>
+                        <option value="Crédit">Crédit (Compte Client)</option>
+                    </select>
+                    <select id="musteriSec" style="display:none;"></select>
+                </div>
+                <button class="btn-success" onclick="satisiBitir()">CONFIRMER LA VENTE</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="urunler" class="tab-content">
+    <div class="card">
+        <h3>Ajouter un Nouveau Produit</h3>
+        <input type="text" id="yeniAd" placeholder="Nom du Produit">
+        <input type="number" id="yeniAlis" placeholder="Prix d'Achat">
+        <input type="number" id="yeniSatis" placeholder="Prix de Vente">
+        <input type="file" id="resimInput">
+        <button class="btn-primary" onclick="yeniUrunKaydet()">Enregistrer</button>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3>Liste du Stock Actuel</h3>
+        <table id="stockTable">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Nom du Produit</th>
+                    <th>Prix Achat</th>
+                    <th>Prix Vente</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="musteriler" class="tab-content">
+    <div class="card">
+        <h3>Ajouter un Client</h3>
+        <input type="text" id="mAd" placeholder="Nom et Prénom">
+        <input type="text" id="mTel" placeholder="Téléphone">
+        <button class="btn-primary" onclick="musteriEkle()">Enregistrer</button>
+    </div>
+    <table id="musteriTable">
+        <thead><tr><th>Client</th><th>Dette</th><th>Action</th></tr></thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div id="raporlar" class="tab-content">
+    <div class="card report-summary">
+        <div>Espèces : <b id="repNakit">0</b>€</div>
+        <div>Carte : <b id="repKart">0</b>€</div>
+        <div>Créances : <b id="repBorc">0</b>€</div>
+        <div>Bénéfice Net : <b id="repKar">0</b>€</div>
+    </div>
+    <table id="raporTable">
+        <thead><tr><th>Date</th><th>Détails</th><th>Montant</th><th>Marge</th></tr></thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div id="iptal" class="tab-content">
+    <div class="card">
+        <h3>Opération de Retour ou Remise</h3>
+        <p style="font-size: 12px; color: gray;">Les montants saisis ici seront déduits de tous les rapports (Caisse, Marge, Dettes).</p>
+        
+        <label>Type d'opération :</label>
+        <select id="iptalTip" onchange="iptalMusteriKontrol()">
+            <option value="Nakit">Retour Espèces</option>
+            <option value="Kredi Kartı">Retour Carte</option>
+            <option value="Veresiye">Déduire de la Dette (Annulation/Remise)</option>
+        </select>
+
+        <label>Client (Uniquement pour Crédit) :</label>
+        <select id="iptalMusteriSec" style="display:none;"></select>
+
+        <label>Description :</label>
+        <input type="text" id="iptalDetay" placeholder="Ex : Retour robinet ou remise sur produit X">
+
+        <label>Montant à déduire (€) :</label>
+        <input type="number" id="iptalTutar" placeholder="0.00">
+
+        <label>Marge à déduire (€) - <small>Optionnel</small> :</label>
+        <input type="number" id="iptalKar" placeholder="Marge à supprimer pour cette action">
+
+        <button class="btn-primary" style="background-color: #e11d48;" onclick="iptalIsleminiYap()">📉 CONFIRMER ET DÉDUIRE</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+<div id="authScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 9999;">
+    <div class="card" style="width: 300px; text-align: center;">
+        <h2 style="margin-bottom: 20px;">🔒 Accès QuincailleriePro</h2>
+        <input type="text" id="loginUser" placeholder="Nom d'utilisateur" style="margin-bottom: 10px;">
+        <input type="password" id="loginPass" placeholder="Mot de passe" style="margin-bottom: 20px;">
+        <button class="btn-primary" onclick="sistemeGirisYap()">Se connecter</button>
+        <p id="errorMsg" style="color: red; display: none; margin-top: 10px; font-size: 12px;">Utilisateur ou Mot de passe incorrect !</p>
+    </div>
+</div>
+</body>
+</html>

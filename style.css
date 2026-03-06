@@ -39,3 +39,58 @@ th { background: #f8fafc; font-size: 11px; color: #64748b; }
 
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal-card { background: white; padding: 40px; border-radius: 16px; width: 320px; text-align: center; }
+/* --- ADAPTATION MOBILE (RESPONSIVE) --- */
+
+@media (max-width: 768px) {
+    /* La barre de navigation devient verticale */
+    .menu {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: center;
+    }
+
+    .menu button {
+        padding: 8px 12px;
+        font-size: 14px;
+        flex: 1 1 40%; /* Deux boutons par ligne sur mobile */
+    }
+
+    /* Le conteneur principal passe en colonne */
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar, .main {
+        width: 100%;
+        padding: 0;
+    }
+
+    /* Les tableaux deviennent défilables horizontalement pour ne pas casser la mise en page */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    /* Ajustement des cartes de produits */
+    .product-preview {
+        margin-bottom: 20px;
+    }
+
+    /* On agrandit les champs de saisie pour que ce soit plus facile à toucher avec le doigt */
+    input, select, button {
+        font-size: 16px !important; /* Évite le zoom automatique sur iPhone */
+        height: 45px;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    /* Grille de rapport sur mobile */
+    .report-summary {
+        grid-template-columns: 1fr 1fr; /* 2 colonnes au lieu de 4 */
+        gap: 10px;
+    }
+}
